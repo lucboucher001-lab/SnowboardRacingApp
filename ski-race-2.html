@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>🏂 Old Geezers – Obergurgl</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body,#root{min-height:100%;width:100%;}
+@keyframes sf{0%{transform:translateY(-10px);opacity:0;}8%{opacity:.8;}92%{opacity:.5;}100%{transform:translateY(105vh) translateX(15px) rotate(480deg);opacity:0;}}
+@keyframes sb{0%,100%{transform:translateX(-50%) rotate(-3deg);}50%{transform:translateX(-50%) rotate(3deg) scaleY(1.05);}}
+@keyframes bw{0%,100%{transform:translateX(-50%) rotate(-5deg);}25%,75%{transform:translateX(-50%) rotate(0deg) scaleY(1.04);}50%{transform:translateX(-50%) rotate(5deg);}}
+@keyframes wp{0%{transform:scale(.3) rotate(-15deg);opacity:0;}65%{transform:scale(1.1) rotate(3deg);opacity:1;}100%{transform:scale(1) rotate(0);opacity:1;}}
+@keyframes gp{0%,100%{box-shadow:0 0 16px rgba(245,197,24,.2);border-color:rgba(245,197,24,.4);}50%{box-shadow:0 0 40px rgba(245,197,24,.6);border-color:rgba(245,197,24,.9);}}
+@keyframes cd{0%{transform:scale(1.8);opacity:.1;}100%{transform:scale(1);opacity:1;}}
+@keyframes su{from{transform:translateY(24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+@keyframes pr{from{transform:scaleY(0);transform-origin:bottom;opacity:0;}to{transform:scaleY(1);transform-origin:bottom;opacity:1;}}
+@keyframes ms{0%,100%{transform:rotate(-1.5deg) translateY(0);}50%{transform:rotate(1.5deg) translateY(-4px);}}
+@keyframes msr{0%,100%{transform:rotate(1.5deg) translateY(0);}50%{transform:rotate(-1.5deg) translateY(-4px);}}
+@keyframes sh{0%{background-position:-200% center;}100%{background-position:200% center;}}
+@keyframes sparkle{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.3;transform:scale(.5) rotate(180deg);}}
+input::placeholder{color:rgba(255,255,255,.38);}
+input:focus{outline:none;box-shadow:0 0 0 2px rgba(245,197,24,.55);}
+button{transition:opacity .15s,transform .15s;cursor:pointer;}
+button:hover:not(:disabled){opacity:.88;transform:scale(1.03);}
+button:active:not(:disabled){transform:scale(.97);}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+'use strict';
+
+var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _React = React;
+var useState = _React.useState;
+var useEffect = _React.useEffect;
+var useRef = _React.useRef;
+
+var COLORS = ['#E63946', '#F4A261', '#2A9D8F', '#5B7BE5', '#9B5DE5', '#F15BB5'];
+var RACE_DURATION = 25000;
+var isDave = function isDave(n) {
+  return n.trim().toLowerCase() === 'dave';
+};
+var easeInOut = function easeInOut(t) {
+  return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+};
+
+// ── Music ──────────────────────────────────────────────
+var BPM = 168,
+    BEAT = 60 / BPM,
+    BAR = BEAT * 4;
+function mkDist(ctx) {
+  var ws = ctx.createWaveShaper(),
+      n = 512,
+      k = 240,
+      c = new Float32Array(n);for (var i = 0; i < n; i++) {
+    var x = i * 2 / n - 1;c[i] = (Math.PI + k) * x / (Math.PI + k * Math.abs(x));
+  }ws.curve = c;ws.oversample = '4x';return ws;
+}
+function pNote(ctx, dest, freq, t, dur, type, vol, dist) {
+  type = type || 'sawtooth';vol = vol || 0.15;var o = ctx.createOscillator(),
+      g = ctx.createGain();o.type = type;o.frequency.value = freq;g.gain.setValueAtTime(0, t);g.gain.linearRampToValueAtTime(vol, t + 0.006);g.gain.setValueAtTime(vol, t + dur - 0.03);g.gain.linearRampToValueAtTime(0, t + dur);if (dist) {
+    var d = mkDist(ctx);o.connect(d);d.connect(g);
+  } else o.connect(g);g.connect(dest);o.start(t);o.stop(t + dur + 0.01);
+}
+function pKick(ctx, dest, t) {
+  var o = ctx.createOscillator(),
+      g = ctx.createGain();o.type = 'sine';o.frequency.setValueAtTime(150, t);o.frequency.exponentialRampToValueAtTime(40, t + 0.07);g.gain.setValueAtTime(1, t);g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);o.connect(g);g.connect(dest);o.start(t);o.stop(t + 0.16);
+}
+function pSnare(ctx, dest, t) {
+  var sz = Math.max(1, Math.floor(ctx.sampleRate * 0.1)),
+      buf = ctx.createBuffer(1, sz, ctx.sampleRate),
+      d = buf.getChannelData(0);for (var i = 0; i < sz; i++) {
+    d[i] = Math.random() * 2 - 1;
+  }var s = ctx.createBufferSource(),
+      f = ctx.createBiquadFilter(),
+      g = ctx.createGain();f.type = 'bandpass';f.frequency.value = 2200;f.Q.value = 0.8;g.gain.setValueAtTime(0.5, t);g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);s.buffer = buf;s.connect(f);f.connect(g);g.connect(dest);s.start(t);s.stop(t + 0.12);
+}
+function pHat(ctx, dest, t, open) {
+  var len = open ? 0.12 : 0.025,
+      sz = Math.max(1, Math.floor(ctx.sampleRate * len)),
+      buf = ctx.createBuffer(1, sz, ctx.sampleRate),
+      d = buf.getChannelData(0);for (var i = 0; i < sz; i++) {
+    d[i] = Math.random() * 2 - 1;
+  }var s = ctx.createBufferSource(),
+      f = ctx.createBiquadFilter(),
+      g = ctx.createGain();f.type = 'highpass';f.frequency.value = 9000;g.gain.setValueAtTime(0.12, t);g.gain.exponentialRampToValueAtTime(0.001, t + len);s.buffer = buf;s.connect(f);f.connect(g);g.connect(dest);s.start(t);s.stop(t + len + 0.01);
+}
+function schedLoop(ctx, dest, t0) {
+  for (var b = 0; b < 8; b++) {
+    var t = t0 + b * BEAT;pHat(ctx, dest, t, b % 2 === 1);if (b % 4 === 0 || b % 4 === 2) pKick(ctx, dest, t);if (b % 4 === 1 || b % 4 === 3) pSnare(ctx, dest, t);if (b % 4 === 2) pKick(ctx, dest, t + BEAT * 0.5);
+  }
+  [[164.81, 246.94, 2 * BEAT], [196, 293.66, BEAT], [220, 329.63, BEAT], [146.83, 220, 2 * BEAT], [164.81, 246.94, 2 * BEAT]].reduce(function (ct, _ref) {
+    var _ref2 = _slicedToArray(_ref, 3);
+
+    var r = _ref2[0];
+    var f = _ref2[1];
+    var dur = _ref2[2];
+    pNote(ctx, dest, r, ct, dur - 0.04, 'sawtooth', 0.10, true);pNote(ctx, dest, f, ct, dur - 0.04, 'sawtooth', 0.08, true);pNote(ctx, dest, r * 2, ct, dur - 0.04, 'square', 0.03, true);return ct + dur;
+  }, t0);
+  [[82.41, .5], [82.41, .5], [110, .5], [82.41, .5], [146.83, .5], [82.41, .5], [123.47, .5], [82.41, .5]].reduce(function (bt, _ref3) {
+    var _ref32 = _slicedToArray(_ref3, 2);
+
+    var f = _ref32[0];
+    var b = _ref32[1];
+    pNote(ctx, dest, f, bt, b * BEAT - 0.02, 'triangle', 0.28, false);return bt + b * BEAT;
+  }, t0);
+  [[329.63, .5], [392, .5], [440, 1], [493.88, .5], [440, .5], [392, .5], [329.63, .5], [293.66, .5], [329.63, .5]].reduce(function (lt, _ref4) {
+    var _ref42 = _slicedToArray(_ref4, 2);
+
+    var f = _ref42[0];
+    var b = _ref42[1];
+    pNote(ctx, dest, f, lt, b * BEAT - 0.03, 'square', 0.07, false);return lt + b * BEAT;
+  }, t0);
+  return BAR * 2;
+}
+function useMusicEngine() {
+  var ctxR = useRef(null),
+      mstR = useRef(null),
+      tmrR = useRef(null),
+      aliveR = useRef(false),
+      mutedR = useRef(false);
+
+  var _useState = useState(false);
+
+  var _useState2 = _slicedToArray(_useState, 2);
+
+  var muted = _useState2[0];
+  var setMuted = _useState2[1];
+
+  var unlock = function unlock() {
+    try {
+      if (ctxR.current) return;
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var m = ctx.createGain();
+      m.gain.setValueAtTime(0, ctx.currentTime);
+      m.connect(ctx.destination);
+      ctxR.current = ctx;mstR.current = m;
+      // silent buffer — fully unlocks audio on Android/iOS
+      var buf = ctx.createBuffer(1, 1, ctx.sampleRate);
+      var src = ctx.createBufferSource();
+      src.buffer = buf;src.connect(ctx.destination);src.start(0);
+    } catch (e) {
+      console.warn('audio unlock', e);
+    }
+  };
+
+  var play = function play() {
+    var ctx = ctxR.current,
+        m = mstR.current;
+    if (!ctx || !m) return;
+    aliveR.current = true;
+    m.gain.setValueAtTime(0, ctx.currentTime);
+    m.gain.linearRampToValueAtTime(mutedR.current ? 0 : 0.65, ctx.currentTime + 0.8);
+    var nb = ctx.currentTime + 0.05;
+    var tick = function tick() {
+      if (!aliveR.current) return;
+      while (nb < ctx.currentTime + 1.6) {
+        nb += schedLoop(ctx, m, nb);
+      }
+      tmrR.current = setTimeout(tick, 300);
+    };
+    tick();
+  };
+
+  var stop = function stop() {
+    aliveR.current = false;
+    clearTimeout(tmrR.current);
+    if (mstR.current && ctxR.current) {
+      try {
+        mstR.current.gain.linearRampToValueAtTime(0, ctxR.current.currentTime + 0.4);
+      } catch (e) {}
+    }
+    setTimeout(function () {
+      try {
+        if (ctxR.current) ctxR.current.close();
+      } catch (e) {}ctxR.current = null;mstR.current = null;
+    }, 500);
+  };
+
+  var toggle = function toggle() {
+    var nx = !mutedR.current;mutedR.current = nx;setMuted(nx);if (mstR.current && ctxR.current) mstR.current.gain.linearRampToValueAtTime(nx ? 0 : 0.65, ctxR.current.currentTime + 0.1);
+  };
+  return { unlock: unlock, play: play, stop: stop, toggle: toggle, muted: muted };
+}
+
+// ── Characters ────────────────────────────────────────
+function Skier(_ref5) {
+  var color = _ref5.color;
+  var size = _ref5.size;
+  size = size || 46;return React.createElement(
+    'svg',
+    { width: size, height: size * 1.44, viewBox: '0 0 52 75', style: { overflow: 'visible' } },
+    React.createElement('ellipse', { cx: '26', cy: '5', rx: '11', ry: '5', fill: color }),
+    React.createElement('rect', { x: '15', y: '3', width: '22', height: '7', rx: '3.5', fill: color }),
+    React.createElement('circle', { cx: '26', cy: '1.5', r: '4', fill: 'white' }),
+    React.createElement('circle', { cx: '26', cy: '18', r: '9', fill: '#FDBCB4' }),
+    React.createElement('ellipse', { cx: '17.5', cy: '18', rx: '2.8', ry: '3.5', fill: '#f0a898' }),
+    React.createElement('ellipse', { cx: '34.5', cy: '18', rx: '2.8', ry: '3.5', fill: '#f0a898' }),
+    React.createElement('ellipse', { cx: '26', cy: '16', rx: '8.5', ry: '4.5', fill: 'rgba(150,215,255,.65)', stroke: color, strokeWidth: '1.5' }),
+    React.createElement('circle', { cx: '19', cy: '22', r: '3', fill: '#ff8a80', opacity: '.32' }),
+    React.createElement('circle', { cx: '33', cy: '22', r: '3', fill: '#ff8a80', opacity: '.32' }),
+    React.createElement('path', { d: 'M20 26 Q22 28.5 26 27.5 Q30 28.5 32 26', stroke: '#b0a0a0', strokeWidth: '2', fill: 'none', strokeLinecap: 'round' }),
+    React.createElement('ellipse', { cx: '26', cy: '38', rx: '10', ry: '12', fill: color }),
+    React.createElement('line', { x1: '16', y1: '33', x2: '3', y2: '42', stroke: color, strokeWidth: '4.5', strokeLinecap: 'round' }),
+    React.createElement('line', { x1: '3', y1: '42', x2: '1', y2: '60', stroke: '#d0d0d0', strokeWidth: '1.5' }),
+    React.createElement('ellipse', { cx: '1', cy: '60', rx: '4', ry: '2.5', fill: 'none', stroke: '#d0d0d0', strokeWidth: '1.2' }),
+    React.createElement('line', { x1: '36', y1: '33', x2: '49', y2: '42', stroke: color, strokeWidth: '4.5', strokeLinecap: 'round' }),
+    React.createElement('line', { x1: '49', y1: '42', x2: '51', y2: '60', stroke: '#d0d0d0', strokeWidth: '1.5' }),
+    React.createElement('ellipse', { cx: '51', cy: '60', rx: '4', ry: '2.5', fill: 'none', stroke: '#d0d0d0', strokeWidth: '1.2' }),
+    React.createElement('line', { x1: '20', y1: '48', x2: '16', y2: '62', stroke: '#1a1a1a', strokeWidth: '5', strokeLinecap: 'round' }),
+    React.createElement('line', { x1: '32', y1: '48', x2: '36', y2: '62', stroke: '#1a1a1a', strokeWidth: '5', strokeLinecap: 'round' }),
+    React.createElement('rect', { x: '4', y: '62', width: '22', height: '3.5', rx: '1.75', fill: '#7B3310' }),
+    React.createElement('ellipse', { cx: '26', cy: '63.75', rx: '3.5', ry: '1.75', fill: '#7B3310' }),
+    React.createElement('rect', { x: '26', y: '62', width: '22', height: '3.5', rx: '1.75', fill: '#9B4318' }),
+    React.createElement('ellipse', { cx: '48', cy: '63.75', rx: '3.5', ry: '1.75', fill: '#9B4318' })
+  );
+}
+
+function Boarder(_ref6) {
+  var color = _ref6.color;
+  var size = _ref6.size;
+  size = size || 46;return React.createElement(
+    'svg',
+    { width: size, height: size * 1.25, viewBox: '0 0 60 75', style: { overflow: 'visible' } },
+    React.createElement('rect', { x: '2', y: '58', width: '56', height: '8', rx: '4', fill: '#1a1a1a' }),
+    React.createElement('rect', { x: '3', y: '59', width: '54', height: '6', rx: '3', fill: color }),
+    React.createElement('rect', { x: '3', y: '61', width: '54', height: '2', rx: '1', fill: 'rgba(255,255,255,.3)' }),
+    React.createElement('ellipse', { cx: '4', cy: '62', rx: '4', ry: '3.5', fill: color }),
+    React.createElement('ellipse', { cx: '56', cy: '62', rx: '4', ry: '3.5', fill: color }),
+    React.createElement('rect', { x: '14', y: '58', width: '8', height: '8', rx: '2', fill: 'rgba(0,0,0,.55)' }),
+    React.createElement('rect', { x: '38', y: '58', width: '8', height: '8', rx: '2', fill: 'rgba(0,0,0,.55)' }),
+    React.createElement('rect', { x: '15', y: '59', width: '6', height: '3', rx: '1', fill: 'rgba(255,255,255,.3)' }),
+    React.createElement('rect', { x: '39', y: '59', width: '6', height: '3', rx: '1', fill: 'rgba(255,255,255,.3)' }),
+    React.createElement('line', { x1: '18', y1: '58', x2: '22', y2: '44', stroke: '#1a1a1a', strokeWidth: '6', strokeLinecap: 'round' }),
+    React.createElement('line', { x1: '42', y1: '58', x2: '38', y2: '44', stroke: '#1a1a1a', strokeWidth: '6', strokeLinecap: 'round' }),
+    React.createElement('ellipse', { cx: '30', cy: '38', rx: '11', ry: '9', fill: color }),
+    React.createElement('line', { x1: '20', y1: '36', x2: '5', y2: '45', stroke: color, strokeWidth: '5', strokeLinecap: 'round' }),
+    React.createElement('circle', { cx: '4', cy: '47', r: '3.5', fill: '#FDBCB4' }),
+    React.createElement('line', { x1: '40', y1: '34', x2: '55', y2: '28', stroke: color, strokeWidth: '5', strokeLinecap: 'round' }),
+    React.createElement('circle', { cx: '56', cy: '27', r: '3.5', fill: '#FDBCB4' }),
+    React.createElement('rect', { x: '27', y: '22', width: '7', height: '9', rx: '3.5', fill: '#FDBCB4' }),
+    React.createElement('circle', { cx: '30', cy: '16', r: '10', fill: '#FDBCB4' }),
+    React.createElement('ellipse', { cx: '21', cy: '16', rx: '3', ry: '4', fill: '#f0a898' }),
+    React.createElement('path', { d: 'M20 14 Q20 4 30 3 Q40 4 40 14 Q40 8 30 8 Q20 8 20 14Z', fill: color }),
+    React.createElement('path', { d: 'M19 16 Q30 14 41 16', stroke: 'rgba(255,255,255,.35)', strokeWidth: '2.5', fill: 'none', strokeLinecap: 'round' }),
+    React.createElement('ellipse', { cx: '30', cy: '17', rx: '11', ry: '5.5', fill: 'rgba(80,180,255,.55)', stroke: color, strokeWidth: '1.5' }),
+    React.createElement('ellipse', { cx: '25', cy: '16', rx: '4.5', ry: '3.5', fill: 'rgba(100,200,255,.4)' }),
+    React.createElement('ellipse', { cx: '35', cy: '16', rx: '4.5', ry: '3.5', fill: 'rgba(100,200,255,.4)' }),
+    React.createElement('ellipse', { cx: '23', cy: '14', rx: '2.5', ry: '1.5', fill: 'white', opacity: '.25', transform: 'rotate(-20 23 14)' }),
+    React.createElement('circle', { cx: '23', cy: '21', r: '3.5', fill: '#ff8a80', opacity: '.3' }),
+    React.createElement('path', { d: 'M25 23 Q27.5 25.5 30 24.5 Q32.5 25.5 35 23', stroke: '#b0a0a0', strokeWidth: '1.8', fill: 'none', strokeLinecap: 'round' })
+  );
+}
+
+function Model(_ref7) {
+  var outfit = _ref7.outfit;
+  var pose = _ref7.pose;
+  var delay = _ref7.delay;
+  var scale = _ref7.scale;
+
+  outfit = outfit || 'noir';pose = pose || 'left';delay = delay || '0s';scale = scale || 1;
+  var P = {
+    noir: { suit: '#1a1a2e', acc: '#c9a84c', fur: '#f5f0e8', skin: '#F5CBA7', hair: '#2C1810', gog: 'rgba(100,60,20,.7)', gf: '#8B6914', boot: '#0d0d1a', glv: '#1a1a2e', pole: '#c9a84c' },
+    blanc: { suit: '#f0f4f8', acc: '#e8355a', fur: '#fffdf5', skin: '#FDBCB4', hair: '#D4A017', gog: 'rgba(220,50,80,.65)', gf: '#c0103a', boot: '#c8cdd4', glv: '#dde3ea', pole: '#e8355a' },
+    rouge: { suit: '#9b1d3a', acc: '#f0d080', fur: '#faf5ee', skin: '#C8A882', hair: '#1C1C1C', gog: 'rgba(240,210,80,.7)', gf: '#c8a830', boot: '#6b1228', glv: '#7a1530', pole: '#f0d080' },
+    azure: { suit: '#1a4a8a', acc: '#e0e8ff', fur: '#f8faff', skin: '#FDBCB4', hair: '#5C3A1E', gog: 'rgba(100,150,255,.65)', gf: '#6090e0', boot: '#0f2d5a', glv: '#1a3d78', pole: '#c0d0ff' }
+  };
+  var p = P[outfit],
+      hx = pose === 'left' ? -3 : 3,
+      sw = pose === 'left' ? 'ms' : 'msr';
+  return React.createElement(
+    'div',
+    { style: { display: 'inline-block', transform: 'scale(' + scale + ')', transformOrigin: 'bottom center', animation: sw + ' 3.5s ease-in-out ' + delay + ' infinite' } },
+    React.createElement(
+      'svg',
+      { width: '80', height: '210', viewBox: '0 0 80 210', style: { overflow: 'visible' } },
+      React.createElement('rect', { x: '35', y: '28', width: '10', height: '14', rx: '5', fill: p.skin }),
+      React.createElement('ellipse', { cx: '40', cy: '18', rx: '12', ry: '14', fill: p.skin }),
+      React.createElement('path', { d: 'M28 16 Q28 4 40 3 Q52 4 52 16 Q52 10 40 9 Q28 10 28 16Z', fill: p.suit }),
+      React.createElement('path', { d: 'M27 18 Q28 15 40 15 Q52 15 53 18 L52 20 Q40 17 28 20Z', fill: p.acc, opacity: '.9' }),
+      React.createElement('path', { d: 'M27 18 Q40 16 53 18', stroke: p.fur, strokeWidth: '3', fill: 'none', strokeLinecap: 'round' }),
+      React.createElement('ellipse', { cx: '40', cy: '20', rx: '14', ry: '7', fill: p.gog }),
+      React.createElement('ellipse', { cx: '40', cy: '20', rx: '14', ry: '7', fill: 'none', stroke: p.gf, strokeWidth: '2' }),
+      React.createElement('rect', { x: '34', y: '18', width: '12', height: '4', rx: '2', fill: p.gf, opacity: '.5' }),
+      React.createElement('ellipse', { cx: '32', cy: '17', rx: '4', ry: '2.5', fill: 'white', opacity: '.25', transform: 'rotate(-20 32 17)' }),
+      React.createElement('path', { d: 'M37 28 Q40 31 43 28', stroke: '#c0506a', strokeWidth: '1.5', fill: '#e0607a', strokeLinecap: 'round' }),
+      React.createElement('path', { d: pose === 'left' ? "M28 18 Q18 35 20 65 Q24 62 26 65 Q28 38 30 20Z" : "M52 18 Q62 35 60 65 Q56 62 54 65 Q52 38 50 20Z", fill: p.hair, opacity: '.92' }),
+      React.createElement('path', { d: 'M30 42 Q' + (28 + hx) + ' 75 ' + (27 + hx) + ' 100 Q' + (33 + hx) + ' 102 40 102 Q' + (47 - hx) + ' 102 ' + (53 - hx) + ' 100 Q' + (52 - hx) + ' 75 50 42Z', fill: p.suit }),
+      React.createElement('path', { d: 'M32 42 Q' + (30 + hx) + ' 70 ' + (30 + hx) + ' 98', stroke: p.acc, strokeWidth: '2.5', fill: 'none', opacity: '.7' }),
+      React.createElement('path', { d: 'M48 42 Q' + (50 - hx) + ' 70 ' + (50 - hx) + ' 98', stroke: p.acc, strokeWidth: '2.5', fill: 'none', opacity: '.7' }),
+      React.createElement('path', { d: 'M34 42 Q40 38 46 42 Q46 46 40 46 Q34 46 34 42Z', fill: p.fur, opacity: '.9' }),
+      React.createElement('path', { d: 'M32 50 Q20 65 16 85', stroke: p.suit, strokeWidth: '9', strokeLinecap: 'round', fill: 'none' }),
+      React.createElement('path', { d: 'M32 50 Q20 65 16 85', stroke: p.acc, strokeWidth: '2', strokeLinecap: 'round', fill: 'none', opacity: '.55' }),
+      React.createElement('ellipse', { cx: '15', cy: '88', rx: '5.5', ry: '4', fill: p.glv }),
+      React.createElement('ellipse', { cx: '15', cy: '85', rx: '6', ry: '2.5', fill: p.fur, opacity: '.9' }),
+      React.createElement('line', { x1: '15', y1: '90', x2: '10', y2: '175', stroke: p.pole, strokeWidth: '1.8' }),
+      React.createElement('path', { d: 'M48 52 Q' + (58 - hx) + ' 65 ' + (60 - hx) + ' 78', stroke: p.suit, strokeWidth: '9', strokeLinecap: 'round', fill: 'none' }),
+      React.createElement('path', { d: 'M48 52 Q' + (58 - hx) + ' 65 ' + (60 - hx) + ' 78', stroke: p.acc, strokeWidth: '2', strokeLinecap: 'round', fill: 'none', opacity: '.55' }),
+      React.createElement('ellipse', { cx: 60 - hx, cy: '81', rx: '5.5', ry: '4', fill: p.glv }),
+      React.createElement('ellipse', { cx: 60 - hx, cy: '78', rx: '6', ry: '2.5', fill: p.fur, opacity: '.9' }),
+      React.createElement('path', { d: 'M' + (27 + hx) + ' 98 Q' + (30 + hx) + ' 108 32 115 L48 115 Q' + (50 - hx) + ' 108 ' + (53 - hx) + ' 98Z', fill: p.suit }),
+      React.createElement('path', { d: 'M32 115 Q29 140 30 175', stroke: p.suit, strokeWidth: '12', strokeLinecap: 'round', fill: 'none' }),
+      React.createElement('path', { d: 'M32 115 Q29 140 30 175', stroke: p.acc, strokeWidth: '2.2', strokeLinecap: 'round', fill: 'none', opacity: '.55' }),
+      React.createElement('path', { d: 'M48 115 Q' + (51 + hx) + ' 140 ' + (50 + hx) + ' 175', stroke: p.suit, strokeWidth: '12', strokeLinecap: 'round', fill: 'none' }),
+      React.createElement('path', { d: 'M48 115 Q' + (51 + hx) + ' 140 ' + (50 + hx) + ' 175', stroke: p.acc, strokeWidth: '2.2', strokeLinecap: 'round', fill: 'none', opacity: '.55' }),
+      React.createElement('rect', { x: '22', y: '172', width: '16', height: '11', rx: '4', fill: p.boot }),
+      React.createElement('rect', { x: '21', y: '178', width: '18', height: '5', rx: '2.5', fill: p.boot }),
+      React.createElement('rect', { x: 42 + hx, y: '172', width: '16', height: '11', rx: '4', fill: p.boot }),
+      React.createElement('rect', { x: 41 + hx, y: '178', width: '18', height: '5', rx: '2.5', fill: p.boot })
+    )
+  );
+}
+
+function WinnerName(_ref8) {
+  var name = _ref8.name;
+
+  var cr = useRef(null),
+      tr = useRef(null);
+
+  var _useState3 = useState(36);
+
+  var _useState32 = _slicedToArray(_useState3, 2);
+
+  var fs = _useState32[0];
+  var setFs = _useState32[1];
+
+  useEffect(function () {
+    var fit = function fit() {
+      if (!cr.current || !tr.current) return;var av = cr.current.clientWidth - 8;var s = 36;tr.current.style.fontSize = s + 'px';while (tr.current.scrollWidth > av && s > 10) {
+        s--;tr.current.style.fontSize = s + 'px';
+      }setFs(s);
+    };
+    var id = requestAnimationFrame(fit);window.addEventListener('resize', fit);return function () {
+      cancelAnimationFrame(id);window.removeEventListener('resize', fit);
+    };
+  }, [name]);
+  return React.createElement(
+    'div',
+    { ref: cr, style: { width: '100%', overflow: 'hidden' } },
+    React.createElement(
+      'div',
+      { ref: tr, style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: fs + 'px', letterSpacing: '.05em', background: 'linear-gradient(90deg,#c8960c 0%,#ffeaa0 25%,#F5C518 50%,#fffde0 75%,#c8960c 100%)', backgroundSize: '200% auto', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', animation: 'sh 2.2s linear infinite,wp .7s ease-out .2s both', whiteSpace: 'nowrap', display: 'inline-block', lineHeight: 1.15 } },
+      name
+    )
+  );
+}
+
+function WinnerPanel(_ref9) {
+  var winner = _ref9.winner;
+  var sorted = _ref9.sorted;
+
+  return React.createElement(
+    'div',
+    { style: { animation: 'su .6s ease-out both', marginTop: 18 } },
+    React.createElement(
+      'div',
+      { style: { position: 'relative', background: 'linear-gradient(160deg,#0d0d1f,#1a0a2e,#0d1a2e)', borderRadius: 24, border: '2px solid rgba(245,197,24,.65)', overflow: 'hidden', animation: 'gp 2.2s ease-in-out infinite' } },
+      React.createElement(
+        'div',
+        { style: { background: 'rgba(245,197,24,.12)', borderBottom: '1px solid rgba(245,197,24,.3)', padding: '10px 16px', textAlign: 'center' } },
+        React.createElement(
+          'div',
+          { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 12, letterSpacing: '.45em', color: 'rgba(245,197,24,.8)' } },
+          'MAISON OBERGURGL · COLLECTION HIVER'
+        )
+      ),
+      React.createElement(
+        'div',
+        { style: { display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflowY: 'hidden', maxHeight: 200 } },
+        React.createElement(
+          'div',
+          { style: { display: 'flex', alignItems: 'flex-end', flexShrink: 0 } },
+          React.createElement(Model, { outfit: 'rouge', pose: 'right', delay: '.4s', scale: 0.58 }),
+          React.createElement(Model, { outfit: 'noir', pose: 'left', delay: '0s', scale: 0.72 })
+        ),
+        React.createElement(
+          'div',
+          { style: { flex: 1, textAlign: 'center', padding: '20px 4px 18px', minWidth: 0, zIndex: 2 } },
+          React.createElement(
+            'div',
+            { style: { fontSize: 44, animation: 'wp .7s ease-out both', lineHeight: 1 } },
+            '🏆'
+          ),
+          React.createElement(
+            'div',
+            { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 11, letterSpacing: '.38em', color: 'rgba(245,197,24,.75)', marginTop: 8 } },
+            'Champion of'
+          ),
+          React.createElement(
+            'div',
+            { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 15, letterSpacing: '.28em', color: 'rgba(255,255,255,.55)', marginBottom: 8 } },
+            'Obergurgl'
+          ),
+          React.createElement(WinnerName, { name: winner.name }),
+          React.createElement(
+            'div',
+            { style: { fontSize: 11, color: 'rgba(255,255,255,.65)', marginTop: 8, lineHeight: 1.6 } },
+            '🥇 ',
+            winner.distance,
+            'm',
+            React.createElement('br', null),
+            React.createElement(
+              'span',
+              { style: { fontSize: 10, opacity: .55, fontStyle: 'italic' } },
+              'Roi de la Montagne'
+            )
+          ),
+          React.createElement(
+            'div',
+            { style: { marginTop: 10, fontSize: 13, letterSpacing: 5, color: 'rgba(245,197,24,.5)' } },
+            '❄ ✦ ❄'
+          )
+        ),
+        React.createElement(
+          'div',
+          { style: { display: 'flex', alignItems: 'flex-end', flexShrink: 0 } },
+          React.createElement(Model, { outfit: 'blanc', pose: 'right', delay: '.2s', scale: 0.88 }),
+          React.createElement(Model, { outfit: 'azure', pose: 'left', delay: '.6s', scale: 0.72 })
+        )
+      ),
+      React.createElement('div', { style: { height: 3, background: 'linear-gradient(90deg,transparent,rgba(245,197,24,.6),transparent)', margin: '0 20px 16px' } }),
+      sorted.length >= 2 && React.createElement(
+        'div',
+        { style: { display: 'flex', justifyContent: 'center', gap: 6, alignItems: 'flex-end', padding: '0 16px 20px' } },
+        [1, 0, 2].map(function (si, vi) {
+          var r = sorted[si];
+          if (!r) return React.createElement('div', { key: vi, style: { width: 68 } });
+          var H = [94, 130, 66],
+              B = ['linear-gradient(180deg,#C8C8C8,#a0a0a0)', 'linear-gradient(180deg,#F5C518,#c8960c)', 'linear-gradient(180deg,#CD7F32,#8a5020)'],
+              M = ['🥈', '🥇', '🥉'];
+          return React.createElement(
+            'div',
+            { key: vi, style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, animation: 'wp .6s ease-out ' + (.4 + vi * .12) + 's both' } },
+            React.createElement(
+              'div',
+              { style: { fontSize: 18 } },
+              M[vi]
+            ),
+            React.createElement(
+              'div',
+              { style: { fontSize: 11, fontWeight: 900, maxWidth: 68, textAlign: 'center', wordBreak: 'break-word', lineHeight: 1.3 } },
+              r.name
+            ),
+            React.createElement(
+              'div',
+              { style: { fontSize: 9, opacity: .55 } },
+              r.distance,
+              'm'
+            ),
+            React.createElement(
+              'div',
+              { style: { width: 68, height: H[vi], background: B[vi], borderRadius: '6px 6px 0 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 8, fontFamily: "'Bebas Neue',sans-serif", fontSize: 26, color: 'rgba(0,0,0,.25)', transformOrigin: 'bottom', animation: 'pr .55s ease-out ' + (.55 + vi * .1) + 's both' } },
+              vi === 1 ? '1' : vi === 0 ? '2' : '3'
+            )
+          );
+        })
+      )
+    )
+  );
+}
+
+// ── Main App ──────────────────────────────────────────
+function App() {
+  var _useState4 = useState('setup');
+
+  var _useState42 = _slicedToArray(_useState4, 2);
+
+  var phase = _useState42[0];
+  var setPhase = _useState42[1];
+
+  var _useState5 = useState([{ id: 1, name: '', distance: '' }, { id: 2, name: '', distance: '' }]);
+
+  var _useState52 = _slicedToArray(_useState5, 2);
+
+  var parts = _useState52[0];
+  var setParts = _useState52[1];
+
+  var _useState6 = useState(3);
+
+  var _useState62 = _slicedToArray(_useState6, 2);
+
+  var nid = _useState62[0];
+  var setNid = _useState62[1];
+
+  var _useState7 = useState(0);
+
+  var _useState72 = _slicedToArray(_useState7, 2);
+
+  var prog = _useState72[0];
+  var setProg = _useState72[1];
+
+  var _useState8 = useState(null);
+
+  var _useState82 = _slicedToArray(_useState8, 2);
+
+  var winner = _useState82[0];
+  var setWinner = _useState82[1];
+
+  var _useState9 = useState(null);
+
+  var _useState92 = _slicedToArray(_useState9, 2);
+
+  var cd = _useState92[0];
+  var setCd = _useState92[1];
+
+  var rafR = useRef(null),
+      t0R = useRef(null),
+      trackR = useRef(null);
+
+  var _useState10 = useState(500);
+
+  var _useState102 = _slicedToArray(_useState10, 2);
+
+  var trackH = _useState102[0];
+  var setTrackH = _useState102[1];
+
+  var _useMusicEngine = useMusicEngine();
+
+  var unlockMusic = _useMusicEngine.unlock;
+  var playMusic = _useMusicEngine.play;
+  var stopMusic = _useMusicEngine.stop;
+  var toggleMute = _useMusicEngine.toggle;
+  var muted = _useMusicEngine.muted;
+
+  useEffect(function () {
+    var m = function m() {
+      if (trackR.current) setTrackH(trackR.current.clientHeight);
+    };
+    m();window.addEventListener('resize', m);return function () {
+      return window.removeEventListener('resize', m);
+    };
+  }, [phase]);
+
+  var valid = parts.filter(function (p) {
+    return p.name.trim() && parseFloat(p.distance) > 0;
+  });
+  var maxD = valid.length ? Math.max.apply(Math, _toConsumableArray(valid.map(function (p) {
+    return parseFloat(p.distance);
+  }))) : 1;
+  var upd = function upd(id, f, v) {
+    return setParts(function (ps) {
+      return ps.map(function (p) {
+        return p.id === id ? Object.assign({}, p, _defineProperty({}, f, v)) : p;
+      });
+    });
+  };
+  var addP = function addP() {
+    if (parts.length >= 6) return;setParts(function (ps) {
+      return [].concat(_toConsumableArray(ps), [{ id: nid, name: '', distance: '' }]);
+    });setNid(function (n) {
+      return n + 1;
+    });
+  };
+  var rmP = function rmP(id) {
+    if (parts.length <= 2) return;setParts(function (ps) {
+      return ps.filter(function (p) {
+        return p.id !== id;
+      });
+    });
+  };
+
+  var begin = function begin() {
+    if (valid.length < 2) return;
+    unlockMusic(); // must be called synchronously in user gesture
+    setPhase('countdown');setCd(3);var c = 3;
+    var iv = setInterval(function () {
+      c--;
+      if (c > 0) {
+        setCd(c);
+      } else {
+        (function () {
+          clearInterval(iv);setCd(null);setPhase('racing');playMusic();setProg(0);t0R.current = null;
+          var anim = function anim(ts) {
+            if (!t0R.current) t0R.current = ts;
+            var p = Math.min((ts - t0R.current) / RACE_DURATION, 1);
+            setProg(p);
+            if (p < 1) {
+              rafR.current = requestAnimationFrame(anim);
+            } else {
+              var w = valid.reduce(function (a, b) {
+                return parseFloat(a.distance) >= parseFloat(b.distance) ? a : b;
+              });
+              setWinner(w);stopMusic();setPhase('finished');
+            }
+          };
+          rafR.current = requestAnimationFrame(anim);
+        })();
+      }
+    }, 1000);
+  };
+
+  var reset = function reset() {
+    cancelAnimationFrame(rafR.current);stopMusic();setPhase('setup');setProg(0);setWinner(null);setCd(null);setParts([{ id: 1, name: '', distance: '' }, { id: 2, name: '', distance: '' }]);setNid(3);
+  };
+
+  var eased = easeInOut(prog);
+  var pwc = valid.map(function (p, i) {
+    return Object.assign({}, p, { color: COLORS[i % COLORS.length] });
+  });
+  var sorted = [].concat(_toConsumableArray(pwc)).sort(function (a, b) {
+    return parseFloat(b.distance) - parseFloat(a.distance);
+  });
+  var SH = 67,
+      FG = 24,
+      maxT = Math.max(trackH - SH - FG - 4, 20);
+
+  return React.createElement(
+    'div',
+    { style: { minHeight: '100vh', background: 'linear-gradient(180deg,#040f1f 0%,#0b2240 20%,#163d75 50%,#b8d8f0 80%,#e5f2fb 100%)', fontFamily: "'Nunito',sans-serif", color: 'white', position: 'relative', overflow: 'hidden' } },
+    React.createElement(
+      'div',
+      { style: { position: 'fixed', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 } },
+      [].concat(_toConsumableArray(Array(22))).map(function (_, i) {
+        var l = (i * 4.5 + 1) % 100 + '%',
+            s = 2 + i % 5 * .7 + 'px',
+            d = 5 + i % 6 * 1.2 + 's',
+            dl = -(i * .65) % 9 + 's',
+            o = .22 + i % 4 * .09;
+        return React.createElement('div', { key: i, style: { position: 'absolute', top: 0, left: l, width: s, height: s, borderRadius: '50%', background: 'white', opacity: o, animation: 'sf ' + d + ' ' + dl + ' linear infinite' } });
+      })
+    ),
+    React.createElement(
+      'svg',
+      { style: { position: 'fixed', bottom: 0, left: 0, width: '100%', zIndex: 0, pointerEvents: 'none' }, viewBox: '0 0 400 140', preserveAspectRatio: 'none' },
+      React.createElement('path', { d: 'M0 140 L40 40 L80 80 L130 10 L175 60 L220 5 L265 55 L310 20 L360 70 L400 42 L400 140Z', fill: '#07182d', opacity: '.9' }),
+      React.createElement('path', { d: 'M0 140 L0 110 L50 80 L100 100 L160 55 L215 82 L270 45 L330 78 L400 62 L400 140Z', fill: '#0f2440', opacity: '.8' }),
+      React.createElement('path', { d: 'M130 10 L145 30 L117 31Z', fill: 'white', opacity: '.85' }),
+      React.createElement('path', { d: 'M220 5 L237 28 L205 28Z', fill: 'white', opacity: '.9' }),
+      React.createElement('path', { d: 'M310 20 L323 40 L298 40Z', fill: 'white', opacity: '.78' }),
+      React.createElement('path', { d: 'M0 140 L0 126 L80 118 L200 122 L330 116 L400 120 L400 140Z', fill: 'white', opacity: '.95' })
+    ),
+    React.createElement(
+      'div',
+      { style: { position: 'relative', zIndex: 1, maxWidth: 600, margin: '0 auto', padding: '18px 12px 40px' } },
+      React.createElement(
+        'div',
+        { style: { textAlign: 'center', marginBottom: 18, animation: 'su .7s ease-out both', position: 'relative', zIndex: 5 } },
+        React.createElement(
+          'div',
+          { style: { fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: 'clamp(32px,11vw,70px)', letterSpacing: '.06em', lineHeight: 1, textShadow: '3px 3px 0 #C1121F,7px 7px 0 rgba(0,0,0,.45)' } },
+          '🏂 OLD GEEZERS 🏂'
+        ),
+        React.createElement(
+          'div',
+          { style: { fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: 'clamp(12px,4vw,26px)', letterSpacing: '.22em', color: '#F5C518', marginTop: 2 } },
+          'DOWNHILL CHAMPIONSHIP'
+        ),
+        React.createElement(
+          'div',
+          { style: { display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8, background: 'rgba(255,255,255,.12)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,.25)', borderRadius: 30, padding: '4px 16px' } },
+          React.createElement(
+            'span',
+            null,
+            '🏔️'
+          ),
+          React.createElement(
+            'span',
+            { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 'clamp(13px,4vw,20px)', letterSpacing: '.28em' } },
+            'OBERGURGL'
+          ),
+          React.createElement(
+            'span',
+            null,
+            '🇦🇹'
+          )
+        ),
+        React.createElement(
+          'div',
+          { style: { marginTop: 5, fontSize: 10, letterSpacing: '.28em', opacity: .4, textTransform: 'uppercase' } },
+          'Alpine Masters Series · Est. 1952'
+        )
+      ),
+      phase === 'setup' && React.createElement(
+        'div',
+        { style: { animation: 'su .5s ease-out both' } },
+        React.createElement(
+          'div',
+          { style: { background: 'rgba(255,255,255,.09)', backdropFilter: 'blur(14px)', borderRadius: 18, border: '1px solid rgba(255,255,255,.18)', padding: 20, marginBottom: 16 } },
+          React.createElement(
+            'div',
+            { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 19, letterSpacing: '.15em', color: '#F5C518', marginBottom: 14 } },
+            '📋 REGISTER COMPETITORS'
+          ),
+          parts.map(function (p, i) {
+            return React.createElement(
+              'div',
+              { key: p.id, style: { display: 'flex', gap: 8, marginBottom: 10, alignItems: 'center' } },
+              React.createElement(
+                'div',
+                { style: { width: 26, height: 26, borderRadius: '50%', background: COLORS[i % COLORS.length], display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 12, flexShrink: 0 } },
+                i + 1
+              ),
+              React.createElement('input', { value: p.name, onChange: function (e) {
+                  return upd(p.id, 'name', e.target.value);
+                }, placeholder: 'Name', style: { flex: 2, padding: '9px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,.22)', background: 'rgba(255,255,255,.11)', color: 'white', fontSize: 14 } }),
+              React.createElement('input', { value: p.distance, onChange: function (e) {
+                  return upd(p.id, 'distance', e.target.value);
+                }, placeholder: 'Dist (m)', type: 'number', min: '1', style: { width: 88, padding: '9px 10px', borderRadius: 10, border: '1px solid rgba(255,255,255,.22)', background: 'rgba(255,255,255,.11)', color: 'white', fontSize: 14 } }),
+              React.createElement(
+                'button',
+                { onClick: function () {
+                    return rmP(p.id);
+                  }, disabled: parts.length <= 2, style: { width: 26, height: 26, borderRadius: '50%', border: 'none', background: parts.length <= 2 ? 'rgba(255,255,255,.07)' : 'rgba(214,40,40,.65)', color: 'white', fontSize: 16, lineHeight: '26px', padding: 0, flexShrink: 0 } },
+                '×'
+              )
+            );
+          }),
+          parts.length < 6 && React.createElement(
+            'button',
+            { onClick: addP, style: { marginTop: 4, padding: '7px 16px', borderRadius: 8, border: '1px dashed rgba(255,255,255,.32)', background: 'transparent', color: 'rgba(255,255,255,.6)', fontSize: 12 } },
+            '+ ADD COMPETITOR'
+          )
+        ),
+        React.createElement(
+          'div',
+          { style: { textAlign: 'center' } },
+          React.createElement(
+            'button',
+            { onClick: begin, disabled: valid.length < 2, style: { padding: '15px 50px', borderRadius: 50, border: 'none', background: valid.length >= 2 ? 'linear-gradient(135deg,#D62828,#F77F00)' : 'rgba(255,255,255,.15)', color: 'white', fontFamily: "'Bebas Neue',sans-serif", fontSize: 26, letterSpacing: '.18em', boxShadow: valid.length >= 2 ? '0 8px 30px rgba(214,40,40,.45)' : 'none', opacity: valid.length >= 2 ? 1 : .5 } },
+            '🏁 START THE RACE!'
+          ),
+          valid.length < 2 && React.createElement(
+            'div',
+            { style: { marginTop: 8, fontSize: 11, opacity: .5 } },
+            'Enter names & distances for at least 2 racers'
+          )
+        )
+      ),
+      phase === 'countdown' && React.createElement(
+        'div',
+        { style: { textAlign: 'center', padding: '40px 0' } },
+        React.createElement(
+          'div',
+          { key: 'cd' + cd, style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 'clamp(140px,42vw,220px)', color: '#F5C518', textShadow: '5px 5px 0 #C1121F,12px 12px 0 rgba(0,0,0,.5)', lineHeight: 1, animation: 'cd .85s cubic-bezier(.22,1,.36,1) both' } },
+          cd
+        ),
+        React.createElement(
+          'div',
+          { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, letterSpacing: '.25em', opacity: .68, marginTop: 12 } },
+          'RACERS TAKE YOUR POSITIONS…'
+        )
+      ),
+      (phase === 'racing' || phase === 'finished') && React.createElement(
+        'div',
+        { style: { animation: 'su .4s ease-out both' } },
+        React.createElement(
+          'div',
+          { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 10 } },
+          React.createElement(
+            'div',
+            { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 17, letterSpacing: '.18em', color: '#F5C518' } },
+            phase === 'racing' ? '❄️ RACE IN PROGRESS' : '🏁 RACE COMPLETE!'
+          ),
+          phase === 'racing' && React.createElement(
+            'button',
+            { onClick: toggleMute, style: { background: 'rgba(255,255,255,.12)', border: '1px solid rgba(255,255,255,.25)', borderRadius: 20, padding: '4px 10px', color: 'white', fontSize: 16, lineHeight: 1 } },
+            muted ? '🔇' : '🔊'
+          )
+        ),
+        React.createElement(
+          'div',
+          { style: { display: 'flex', gap: 6, alignItems: 'stretch' } },
+          pwc.map(function (p, li) {
+            var r = parseFloat(p.distance) / maxD,
+                top = r * eased * maxT,
+                win = winner && winner.id === p.id,
+                dv = isDave(p.name);
+            return React.createElement(
+              'div',
+              { key: p.id, style: { flex: 1, display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 } },
+              React.createElement(
+                'div',
+                { style: { textAlign: 'center' } },
+                React.createElement(
+                  'div',
+                  { style: { display: 'inline-block', background: p.color, borderRadius: 7, padding: '3px 7px', fontWeight: 900, fontSize: 'clamp(9px,2.8vw,13px)', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', boxShadow: win ? '0 0 14px ' + p.color + 'aa' : 'none' } },
+                  win ? '👑' : '',
+                  p.name
+                ),
+                React.createElement(
+                  'div',
+                  { style: { fontSize: 10, opacity: .52, marginTop: 1 } },
+                  p.distance,
+                  'm'
+                )
+              ),
+              React.createElement(
+                'div',
+                { ref: li === 0 ? trackR : null, style: { flex: 1, minHeight: '55vh', position: 'relative', borderRadius: 12, overflow: 'hidden', background: 'linear-gradient(180deg,rgba(220,240,255,.24) 0%,rgba(255,255,255,.08) 60%,rgba(200,230,255,.2) 100%)', border: '1px solid ' + (win ? 'rgba(245,197,24,.58)' : 'rgba(255,255,255,.18)'), animation: win && phase === 'finished' ? 'gp 1.8s ease-in-out infinite' : 'none' } },
+                [20, 40, 60, 80].map(function (pct) {
+                  return React.createElement('div', { key: pct, style: { position: 'absolute', top: pct + '%', left: '10%', right: '10%', height: 1, background: 'rgba(255,255,255,.08)' } });
+                }),
+                (dv ? [-5, 5] : [-4, 4]).map(function (off, ti) {
+                  return React.createElement('div', { key: ti, style: { position: 'absolute', left: 'calc(50% + ' + off + 'px)', width: 1.5, top: 0, height: top + SH * .72, background: 'linear-gradient(180deg,transparent,rgba(255,255,255,' + (ti === 0 ? .3 : .18) + '))', borderRadius: 1, pointerEvents: 'none' } });
+                }),
+                React.createElement('div', { style: { position: 'absolute', bottom: 8, left: 0, right: 0, height: 8, background: 'repeating-linear-gradient(90deg,#111 0,#111 5px,#fff 5px,#fff 10px)', opacity: .9 } }),
+                React.createElement(
+                  'div',
+                  { style: { position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', fontSize: 12 } },
+                  '🏁'
+                ),
+                React.createElement(
+                  'div',
+                  { style: { position: 'absolute', top: top, left: '50%', transform: 'translateX(-50%)', animation: phase === 'racing' ? dv ? 'sb ' + (.28 + r * .06) + 's ease-in-out infinite' : 'bw ' + (.38 + r * .07) + 's ease-in-out infinite' : 'none', filter: win && phase === 'finished' ? 'drop-shadow(0 0 9px rgba(245,197,24,.95))' : 'none' } },
+                  dv ? React.createElement(Skier, { color: p.color, size: 46 }) : React.createElement(Boarder, { color: p.color, size: 46 })
+                )
+              )
+            );
+          })
+        ),
+        phase === 'finished' && winner && React.createElement(WinnerPanel, { winner: winner, sorted: sorted }),
+        React.createElement(
+          'div',
+          { style: { textAlign: 'center', marginTop: 18 } },
+          React.createElement(
+            'button',
+            { onClick: reset, style: { padding: '12px 36px', borderRadius: 50, border: '2px solid rgba(255,255,255,.38)', background: 'rgba(255,255,255,.08)', backdropFilter: 'blur(8px)', color: 'white', fontFamily: "'Bebas Neue',sans-serif", fontSize: 19, letterSpacing: '.2em' } },
+            '🔄 RACE AGAIN!'
+          )
+        )
+      )
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App, null));
+/* Snow */ /* Mountains */ /* Title */ /* Setup */ /* Countdown */ /* Racing / Finished */
+</script></body></html>
