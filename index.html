@@ -364,7 +364,7 @@ function WinnerPanel(_ref9) {
     { style: { animation: 'su .6s ease-out both', marginTop: 18 } },
     React.createElement(
       'div',
-      { style: { position: 'relative', background: 'linear-gradient(160deg,#0d0d1f,#1a0a2e,#0d1a2e)', borderRadius: 24, border: '2px solid rgba(245,197,24,.65)', overflow: 'hidden', animation: 'gp 2.2s ease-in-out infinite' } },
+      { style: { background: 'linear-gradient(160deg,#0d0d1f,#1a0a2e,#0d1a2e)', borderRadius: 24, border: '2px solid rgba(245,197,24,.65)', overflow: 'hidden', animation: 'gp 2.2s ease-in-out infinite' } },
       React.createElement(
         'div',
         { style: { background: 'rgba(245,197,24,.12)', borderBottom: '1px solid rgba(245,197,24,.3)', padding: '10px 16px', textAlign: 'center' } },
@@ -376,90 +376,74 @@ function WinnerPanel(_ref9) {
       ),
       React.createElement(
         'div',
-        { style: { display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflow: 'hidden', height: 150 } },
+        { style: { textAlign: 'center', paddingTop: 14, fontSize: 18, letterSpacing: 12, color: 'rgba(245,197,24,.3)' } },
+        '❄ ✦ ❄ ✦ ❄'
+      ),
+      React.createElement(
+        'div',
+        { style: { textAlign: 'center', padding: '10px 24px 20px' } },
         React.createElement(
           'div',
-          { style: { display: 'flex', alignItems: 'flex-end', flexShrink: 0 } },
-          React.createElement(Model, { outfit: 'rouge', pose: 'right', delay: '.4s', scale: 0.45 }),
-          React.createElement(Model, { outfit: 'noir', pose: 'left', delay: '0s', scale: 0.55 })
+          { style: { fontSize: 52, animation: 'wp .7s ease-out both', lineHeight: 1 } },
+          '🏆'
         ),
         React.createElement(
           'div',
-          { style: { flex: 1, textAlign: 'center', padding: '20px 4px 18px', minWidth: 0, zIndex: 2 } },
+          { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 12, letterSpacing: '.38em', color: 'rgba(245,197,24,.75)', marginTop: 10 } },
+          'Champion of'
+        ),
+        React.createElement(
+          'div',
+          { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: '.28em', color: 'rgba(255,255,255,.65)', marginBottom: 8 } },
+          'Obergurgl'
+        ),
+        React.createElement(WinnerName, { name: winner.name }),
+        React.createElement(
+          'div',
+          { style: { fontSize: 12, color: 'rgba(255,255,255,.65)', marginTop: 8, lineHeight: 1.8 } },
+          '🥇 ',
+          winner.distance,
+          'm',
+          React.createElement('br', null),
           React.createElement(
-            'div',
-            { style: { fontSize: 44, animation: 'wp .7s ease-out both', lineHeight: 1 } },
-            '🏆'
-          ),
-          React.createElement(
-            'div',
-            { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 11, letterSpacing: '.38em', color: 'rgba(245,197,24,.75)', marginTop: 8 } },
-            'Champion of'
-          ),
-          React.createElement(
-            'div',
-            { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 15, letterSpacing: '.28em', color: 'rgba(255,255,255,.55)', marginBottom: 8 } },
-            'Obergurgl'
-          ),
-          React.createElement(WinnerName, { name: winner.name }),
-          React.createElement(
-            'div',
-            { style: { fontSize: 11, color: 'rgba(255,255,255,.65)', marginTop: 8, lineHeight: 1.6 } },
-            '🥇 ',
-            winner.distance,
-            'm',
-            React.createElement('br', null),
-            React.createElement(
-              'span',
-              { style: { fontSize: 10, opacity: .55, fontStyle: 'italic' } },
-              'Roi de la Montagne'
-            )
-          ),
-          React.createElement(
-            'div',
-            { style: { marginTop: 10, fontSize: 13, letterSpacing: 5, color: 'rgba(245,197,24,.5)' } },
-            '❄ ✦ ❄'
+            'span',
+            { style: { fontSize: 11, opacity: .55, fontStyle: 'italic' } },
+            'Roi de la Montagne'
           )
-        ),
-        React.createElement(
-          'div',
-          { style: { display: 'flex', alignItems: 'flex-end', flexShrink: 0 } },
-          React.createElement(Model, { outfit: 'blanc', pose: 'right', delay: '.2s', scale: 0.88 }),
-          React.createElement(Model, { outfit: 'azure', pose: 'left', delay: '.6s', scale: 0.72 })
         )
       ),
-      React.createElement('div', { style: { height: 3, background: 'linear-gradient(90deg,transparent,rgba(245,197,24,.6),transparent)', margin: '0 20px 16px' } }),
+      React.createElement('div', { style: { margin: '0 24px', height: 1, background: 'linear-gradient(90deg,transparent,rgba(245,197,24,.5),transparent)' } }),
       sorted.length >= 2 && React.createElement(
         'div',
-        { style: { display: 'flex', justifyContent: 'center', gap: 6, alignItems: 'flex-end', padding: '0 16px 20px' } },
+        { style: { display: 'flex', justifyContent: 'center', gap: 6, alignItems: 'flex-end', padding: '20px 16px 24px' } },
         [1, 0, 2].map(function (si, vi) {
           var r = sorted[si];
-          if (!r) return React.createElement('div', { key: vi, style: { width: 68 } });
+          if (!r) return React.createElement('div', { key: vi, style: { width: 72 } });
           var H = [94, 130, 66],
               B = ['linear-gradient(180deg,#C8C8C8,#a0a0a0)', 'linear-gradient(180deg,#F5C518,#c8960c)', 'linear-gradient(180deg,#CD7F32,#8a5020)'],
               M = ['🥈', '🥇', '🥉'];
           return React.createElement(
             'div',
-            { key: vi, style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, animation: 'wp .6s ease-out ' + (.4 + vi * .12) + 's both' } },
+            { key: vi, style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, animation: 'wp .6s ease-out ' + (.4 + vi * .12) + 's both' } },
             React.createElement(
               'div',
-              { style: { fontSize: 18 } },
+              { style: { fontSize: 20 } },
               M[vi]
             ),
             React.createElement(
               'div',
-              { style: { fontSize: 11, fontWeight: 900, maxWidth: 68, textAlign: 'center', wordBreak: 'break-word', lineHeight: 1.3 } },
+              { style: { fontSize: 12, fontWeight: 900, maxWidth: 72, textAlign: 'center', wordBreak: 'break-word', lineHeight: 1.3, color: 'white' } },
               r.name
             ),
             React.createElement(
               'div',
-              { style: { fontSize: 9, opacity: .55 } },
+              { style: { fontSize: 10, opacity: .55, color: 'white' } },
               r.distance,
               'm'
             ),
             React.createElement(
               'div',
-              { style: { width: 68, height: H[vi], background: B[vi], borderRadius: '6px 6px 0 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 8, fontFamily: "'Bebas Neue',sans-serif", fontSize: 26, color: 'rgba(0,0,0,.25)', transformOrigin: 'bottom', animation: 'pr .55s ease-out ' + (.55 + vi * .1) + 's both' } },
+              { style: { width: 72, height: H[vi], background: B[vi], borderRadius: '6px 6px 0 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 8, fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: 'rgba(0,0,0,.25)', transformOrigin: 'bottom', animation: 'pr .55s ease-out ' + (.55 + vi * .1) + 's both' } },
               vi === 1 ? '1' : vi === 0 ? '2' : '3'
             )
           );
@@ -677,7 +661,7 @@ function App() {
         React.createElement(
           'div',
           { style: { marginTop: 5, fontSize: 10, letterSpacing: '.28em', opacity: .4, textTransform: 'uppercase' } },
-          'Alpine Masters Series · Est. 1952'
+          'Alpine Masters Series · March 2026'
         )
       ),
       phase === 'setup' && React.createElement(
@@ -834,5 +818,5 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App, null));
-/* Snow */ /* Mountains */ /* Title */ /* Setup */ /* Countdown */ /* Racing / Finished */
+/* Header */ /* Decorative snowflakes top */ /* Winner info */ /* Decorative divider */ /* Podium */ /* Snow */ /* Mountains */ /* Title */ /* Setup */ /* Countdown */ /* Racing / Finished */
 </script></body></html>
