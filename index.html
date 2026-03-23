@@ -359,6 +359,8 @@ function WinnerPanel(_ref9) {
   var winner = _ref9.winner;
   var sorted = _ref9.sorted;
 
+  var isDraw = winner.length > 1;
+  var winDist = winner[0].distance;
   return React.createElement(
     'div',
     { style: { animation: 'su .6s ease-out both', marginTop: 18 } },
@@ -385,69 +387,106 @@ function WinnerPanel(_ref9) {
         React.createElement(
           'div',
           { style: { fontSize: 52, animation: 'wp .7s ease-out both', lineHeight: 1 } },
-          '🏆'
+          isDraw ? '🏆🏆' : '🏆'
         ),
         React.createElement(
           'div',
           { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 12, letterSpacing: '.38em', color: 'rgba(245,197,24,.75)', marginTop: 10 } },
-          'Champion of'
+          isDraw ? 'Joint Champions of' : 'Champion of'
         ),
         React.createElement(
           'div',
           { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: '.28em', color: 'rgba(255,255,255,.65)', marginBottom: 8 } },
           'Obergurgl'
         ),
-        React.createElement(WinnerName, { name: winner.name }),
+        isDraw ? React.createElement(
+          'div',
+          { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, width: '100%' } },
+          winner.map(function (w, i) {
+            return React.createElement(WinnerName, { key: i, name: w.name });
+          })
+        ) : React.createElement(WinnerName, { name: winner[0].name }),
         React.createElement(
           'div',
           { style: { fontSize: 12, color: 'rgba(255,255,255,.65)', marginTop: 8, lineHeight: 1.8 } },
           '🥇 ',
-          winner.distance,
+          winDist,
           'm',
           React.createElement('br', null),
           React.createElement(
             'span',
             { style: { fontSize: 11, opacity: .55, fontStyle: 'italic' } },
-            'Roi de la Montagne'
+            isDraw ? 'Les Rois de la Montagne' : 'Roi de la Montagne'
           )
         )
       ),
       React.createElement('div', { style: { margin: '0 24px', height: 1, background: 'linear-gradient(90deg,transparent,rgba(245,197,24,.5),transparent)' } }),
       sorted.length >= 2 && React.createElement(
         'div',
-        { style: { display: 'flex', justifyContent: 'center', gap: 6, alignItems: 'flex-end', padding: '20px 16px 24px' } },
-        [1, 0, 2].map(function (si, vi) {
-          var r = sorted[si];
-          if (!r) return React.createElement('div', { key: vi, style: { width: 72 } });
-          var H = [94, 130, 66],
-              B = ['linear-gradient(180deg,#C8C8C8,#a0a0a0)', 'linear-gradient(180deg,#F5C518,#c8960c)', 'linear-gradient(180deg,#CD7F32,#8a5020)'],
-              M = ['🥈', '🥇', '🥉'];
-          return React.createElement(
-            'div',
-            { key: vi, style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, animation: 'wp .6s ease-out ' + (.4 + vi * .12) + 's both' } },
-            React.createElement(
+        { style: { display: 'flex', justifyContent: 'center', gap: 6, alignItems: 'flex-end', padding: '20px 16px 24px', flexWrap: 'wrap' } },
+        (function () {
+          // Build podium positions with proper athletics ranking (ties skip positions)
+          var positions = [];
+          var i = 0,
+              rank = 1;
+          while (i < sorted.length) {
+            var dist = parseFloat(sorted[i].distance);
+            var tied = [];
+            while (i < sorted.length && parseFloat(sorted[i].distance) === dist) {
+              tied.push(sorted[i]);i++;
+            }
+            positions.push({ rank: rank, racers: tied, dist: dist });
+            rank += tied.length; // skip positions: 3 tied for 1st → next is 4th
+          }
+          // Only show positions 1, 2, 3 on the podium
+          var visiblePositions = positions.filter(function (p) {
+            return p.rank <= 3;
+          });
+          var goldPos = visiblePositions.find(function (p) {
+            return p.rank === 1;
+          });
+          var silverPos = visiblePositions.find(function (p) {
+            return p.rank === 2;
+          });
+          var bronzePos = visiblePositions.find(function (p) {
+            return p.rank === 3;
+          });
+          var H = { 1: 130, 2: 94, 3: 66 };
+          var B = { 1: 'linear-gradient(180deg,#F5C518,#c8960c)', 2: 'linear-gradient(180deg,#C8C8C8,#a0a0a0)', 3: 'linear-gradient(180deg,#CD7F32,#8a5020)' };
+          var M = { 1: '🥇', 2: '🥈', 3: '🥉' };
+          var order = [silverPos, goldPos, bronzePos].filter(Boolean);
+          return order.map(function (pos, vi) {
+            return React.createElement(
               'div',
-              { style: { fontSize: 20 } },
-              M[vi]
-            ),
-            React.createElement(
-              'div',
-              { style: { fontSize: 12, fontWeight: 900, maxWidth: 72, textAlign: 'center', wordBreak: 'break-word', lineHeight: 1.3, color: 'white' } },
-              r.name
-            ),
-            React.createElement(
-              'div',
-              { style: { fontSize: 10, opacity: .55, color: 'white' } },
-              r.distance,
-              'm'
-            ),
-            React.createElement(
-              'div',
-              { style: { width: 72, height: H[vi], background: B[vi], borderRadius: '6px 6px 0 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 8, fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: 'rgba(0,0,0,.25)', transformOrigin: 'bottom', animation: 'pr .55s ease-out ' + (.55 + vi * .1) + 's both' } },
-              vi === 1 ? '1' : vi === 0 ? '2' : '3'
-            )
-          );
-        })
+              { key: vi, style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, animation: 'wp .6s ease-out ' + (.4 + vi * .12) + 's both' } },
+              React.createElement(
+                'div',
+                { style: { fontSize: 20 } },
+                pos.racers.length > 1 ? pos.racers.map(function () {
+                  return M[pos.rank];
+                }).join('') : M[pos.rank]
+              ),
+              React.createElement(
+                'div',
+                { style: { fontSize: 12, fontWeight: 900, maxWidth: pos.racers.length > 1 ? 120 : 72, textAlign: 'center', wordBreak: 'break-word', lineHeight: 1.4, color: 'white' } },
+                pos.racers.map(function (r) {
+                  return r.name;
+                }).join(' & ')
+              ),
+              React.createElement(
+                'div',
+                { style: { fontSize: 10, opacity: .55, color: 'white' } },
+                pos.dist,
+                'm'
+              ),
+              React.createElement(
+                'div',
+                { style: { width: pos.racers.length > 1 ? 120 : 72, height: H[pos.rank], background: B[pos.rank], borderRadius: '6px 6px 0 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 8, fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: 'rgba(0,0,0,.25)', transformOrigin: 'bottom', animation: 'pr .55s ease-out ' + (.55 + vi * .1) + 's both' } },
+                pos.racers.length > 1 ? pos.rank + '=' : pos.rank
+              )
+            );
+          });
+        })()
       )
     )
   );
@@ -571,10 +610,15 @@ function App() {
             if (p < 1) {
               rafR.current = requestAnimationFrame(anim);
             } else {
-              var w = valid.reduce(function (a, b) {
-                return parseFloat(a.distance) >= parseFloat(b.distance) ? a : b;
-              });
-              setWinner(w);stopMusic();setPhase('finished');
+              (function () {
+                var maxDist = Math.max.apply(Math, _toConsumableArray(valid.map(function (p) {
+                  return parseFloat(p.distance);
+                })));
+                var winners = pwc.filter(function (p) {
+                  return parseFloat(p.distance) === maxDist;
+                });
+                setWinner(winners);stopMusic();setPhase('finished');
+              })();
             }
           };
           rafR.current = requestAnimationFrame(anim);
@@ -757,7 +801,9 @@ function App() {
           pwc.map(function (p, li) {
             var r = parseFloat(p.distance) / maxD,
                 top = r * eased * maxT,
-                win = winner && winner.id === p.id,
+                win = winner && winner.some(function (w) {
+              return w.id === p.id;
+            }),
                 dv = isDave(p.name);
             return React.createElement(
               'div',
@@ -802,7 +848,7 @@ function App() {
             );
           })
         ),
-        phase === 'finished' && winner && React.createElement(WinnerPanel, { winner: winner, sorted: sorted }),
+        phase === 'finished' && winner && winner.length > 0 && React.createElement(WinnerPanel, { winner: winner, sorted: sorted }),
         React.createElement(
           'div',
           { style: { textAlign: 'center', marginTop: 18 } },
@@ -818,5 +864,5 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App, null));
-/* Header */ /* Decorative snowflakes top */ /* Winner info */ /* Decorative divider */ /* Podium */ /* Snow */ /* Mountains */ /* Title */ /* Setup */ /* Countdown */ /* Racing / Finished */
+/* Header */ /* Decorative snowflakes top */ /* Winner info */ /* Decorative divider */ /* Podium - handles draws */ /* Snow */ /* Mountains */ /* Title */ /* Setup */ /* Countdown */ /* Racing / Finished */
 </script></body></html>
