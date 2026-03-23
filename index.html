@@ -361,6 +361,44 @@ function WinnerPanel(_ref9) {
 
   var isDraw = winner.length > 1;
   var winDist = winner[0].distance;
+
+  // ── Build podium outside JSX to avoid IIFE/Babel issues ──
+  // Group sorted racers by distance (string-keyed to avoid float precision issues)
+  var groups = [];
+  for (var ri = 0; ri < sorted.length; ri++) {
+    var d = String(parseFloat(sorted[ri].distance));
+    var last = groups[groups.length - 1];
+    if (!last || last.key !== d) {
+      groups.push({ key: d, dist: sorted[ri].distance, racers: [] });
+    }
+    groups[groups.length - 1].racers.push(sorted[ri]);
+  }
+  // Assign athletics-style ranks: ties consume positions
+  var nextRank = 1;
+  for (var gi = 0; gi < groups.length; gi++) {
+    groups[gi].rank = nextRank;
+    nextRank += groups[gi].racers.length;
+  }
+  // Only include groups that fall within podium positions 1–3
+  // e.g. 4-way tie for 1st → next rank is 5 → no silver or bronze shown
+  var podiumGroups = groups.filter(function (g) {
+    return g.rank <= 3;
+  });
+  var goldGroup = podiumGroups.find(function (g) {
+    return g.rank === 1;
+  });
+  var silverGroup = podiumGroups.find(function (g) {
+    return g.rank === 2;
+  });
+  var bronzeGroup = podiumGroups.find(function (g) {
+    return g.rank === 3;
+  });
+  // Display order: silver | gold | bronze (classic podium layout)
+  var podiumDisplay = [silverGroup, goldGroup, bronzeGroup].filter(Boolean);
+  var PHEIGHTS = { 1: 130, 2: 94, 3: 66 };
+  var PBKGS = { 1: 'linear-gradient(180deg,#F5C518,#c8960c)', 2: 'linear-gradient(180deg,#C8C8C8,#a0a0a0)', 3: 'linear-gradient(180deg,#CD7F32,#8a5020)' };
+  var PMEDALS = { 1: '🥇', 2: '🥈', 3: '🥉' };
+
   return React.createElement(
     'div',
     { style: { animation: 'su .6s ease-out both', marginTop: 18 } },
@@ -421,72 +459,42 @@ function WinnerPanel(_ref9) {
         )
       ),
       React.createElement('div', { style: { margin: '0 24px', height: 1, background: 'linear-gradient(90deg,transparent,rgba(245,197,24,.5),transparent)' } }),
-      sorted.length >= 2 && React.createElement(
+      podiumDisplay.length > 0 && React.createElement(
         'div',
-        { style: { display: 'flex', justifyContent: 'center', gap: 6, alignItems: 'flex-end', padding: '20px 16px 24px', flexWrap: 'wrap' } },
-        (function () {
-          // Build podium positions with proper athletics ranking (ties skip positions)
-          var positions = [];
-          var i = 0,
-              rank = 1;
-          while (i < sorted.length) {
-            var dist = parseFloat(sorted[i].distance);
-            var tied = [];
-            while (i < sorted.length && parseFloat(sorted[i].distance) === dist) {
-              tied.push(sorted[i]);i++;
-            }
-            positions.push({ rank: rank, racers: tied, dist: dist });
-            rank += tied.length; // skip positions: 3 tied for 1st → next is 4th
-          }
-          // Only show positions 1, 2, 3 on the podium
-          var visiblePositions = positions.filter(function (p) {
-            return p.rank <= 3;
-          });
-          var goldPos = visiblePositions.find(function (p) {
-            return p.rank === 1;
-          });
-          var silverPos = visiblePositions.find(function (p) {
-            return p.rank === 2;
-          });
-          var bronzePos = visiblePositions.find(function (p) {
-            return p.rank === 3;
-          });
-          var H = { 1: 130, 2: 94, 3: 66 };
-          var B = { 1: 'linear-gradient(180deg,#F5C518,#c8960c)', 2: 'linear-gradient(180deg,#C8C8C8,#a0a0a0)', 3: 'linear-gradient(180deg,#CD7F32,#8a5020)' };
-          var M = { 1: '🥇', 2: '🥈', 3: '🥉' };
-          var order = [silverPos, goldPos, bronzePos].filter(Boolean);
-          return order.map(function (pos, vi) {
-            return React.createElement(
+        { style: { display: 'flex', justifyContent: 'center', gap: 8, alignItems: 'flex-end', padding: '20px 16px 24px' } },
+        podiumDisplay.map(function (pos, vi) {
+          var isTied = pos.racers.length > 1;
+          var blockW = isTied ? Math.min(150, pos.racers.length * 52) : 72;
+          return React.createElement(
+            'div',
+            { key: pos.rank, style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, animation: 'wp .6s ease-out ' + (.4 + vi * .12) + 's both' } },
+            React.createElement(
               'div',
-              { key: vi, style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, animation: 'wp .6s ease-out ' + (.4 + vi * .12) + 's both' } },
-              React.createElement(
-                'div',
-                { style: { fontSize: 20 } },
-                pos.racers.length > 1 ? pos.racers.map(function () {
-                  return M[pos.rank];
-                }).join('') : M[pos.rank]
-              ),
-              React.createElement(
-                'div',
-                { style: { fontSize: 12, fontWeight: 900, maxWidth: pos.racers.length > 1 ? 120 : 72, textAlign: 'center', wordBreak: 'break-word', lineHeight: 1.4, color: 'white' } },
-                pos.racers.map(function (r) {
-                  return r.name;
-                }).join(' & ')
-              ),
-              React.createElement(
-                'div',
-                { style: { fontSize: 10, opacity: .55, color: 'white' } },
-                pos.dist,
-                'm'
-              ),
-              React.createElement(
-                'div',
-                { style: { width: pos.racers.length > 1 ? 120 : 72, height: H[pos.rank], background: B[pos.rank], borderRadius: '6px 6px 0 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 8, fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: 'rgba(0,0,0,.25)', transformOrigin: 'bottom', animation: 'pr .55s ease-out ' + (.55 + vi * .1) + 's both' } },
-                pos.racers.length > 1 ? pos.rank + '=' : pos.rank
-              )
-            );
-          });
-        })()
+              { style: { fontSize: 18, letterSpacing: 2 } },
+              pos.racers.map(function () {
+                return PMEDALS[pos.rank];
+              }).join('')
+            ),
+            React.createElement(
+              'div',
+              { style: { fontSize: 12, fontWeight: 900, maxWidth: blockW + 20, textAlign: 'center', wordBreak: 'break-word', lineHeight: 1.4, color: 'white' } },
+              pos.racers.map(function (r) {
+                return r.name;
+              }).join(' & ')
+            ),
+            React.createElement(
+              'div',
+              { style: { fontSize: 10, opacity: .55, color: 'white' } },
+              pos.dist,
+              'm'
+            ),
+            React.createElement(
+              'div',
+              { style: { width: blockW, height: PHEIGHTS[pos.rank], background: PBKGS[pos.rank], borderRadius: '6px 6px 0 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 8, fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: 'rgba(0,0,0,.25)', transformOrigin: 'bottom', animation: 'pr .55s ease-out ' + (.55 + vi * .1) + 's both' } },
+              isTied ? pos.rank + '=' : pos.rank
+            )
+          );
+        })
       )
     )
   );
@@ -675,8 +683,51 @@ function App() {
         { style: { textAlign: 'center', marginBottom: 18, animation: 'su .7s ease-out both', position: 'relative', zIndex: 5 } },
         React.createElement(
           'div',
-          { style: { fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: 'clamp(32px,11vw,70px)', letterSpacing: '.06em', lineHeight: 1, textShadow: '3px 3px 0 #C1121F,7px 7px 0 rgba(0,0,0,.45)' } },
-          '🏂 OLD GEEZERS 🏂'
+          { style: { fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: 'clamp(32px,11vw,70px)', letterSpacing: '.06em', lineHeight: 1, textShadow: '3px 3px 0 #C1121F,7px 7px 0 rgba(0,0,0,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.2em' } },
+          React.createElement(
+            'span',
+            null,
+            '🏂'
+          ),
+          React.createElement(
+            'span',
+            null,
+            'OLD GEEZERS'
+          ),
+          React.createElement(
+            'span',
+            { style: { display: 'inline-flex', alignItems: 'center', verticalAlign: 'middle' } },
+            React.createElement(
+              'svg',
+              { width: '0.75em', height: '1.08em', viewBox: '0 0 52 75', style: { overflow: 'visible', filter: 'drop-shadow(3px 3px 0 #C1121F)' } },
+              React.createElement('ellipse', { cx: '26', cy: '5', rx: '11', ry: '5', fill: 'white' }),
+              React.createElement('rect', { x: '15', y: '3', width: '22', height: '7', rx: '3.5', fill: 'white' }),
+              React.createElement('circle', { cx: '26', cy: '1.5', r: '4', fill: '#F5C518' }),
+              React.createElement('rect', { x: '15', y: '8', width: '22', height: '2', fill: 'rgba(255,255,255,0.5)', rx: '1' }),
+              React.createElement('circle', { cx: '26', cy: '18', r: '9', fill: '#FDBCB4' }),
+              React.createElement('ellipse', { cx: '17.5', cy: '18', rx: '2.8', ry: '3.5', fill: '#f0a898' }),
+              React.createElement('ellipse', { cx: '34.5', cy: '18', rx: '2.8', ry: '3.5', fill: '#f0a898' }),
+              React.createElement('ellipse', { cx: '26', cy: '16', rx: '8.5', ry: '4.5', fill: 'rgba(150,215,255,0.75)', stroke: 'white', strokeWidth: '1.5' }),
+              React.createElement('circle', { cx: '19', cy: '22', r: '3', fill: '#ff8a80', opacity: '0.4' }),
+              React.createElement('circle', { cx: '33', cy: '22', r: '3', fill: '#ff8a80', opacity: '0.4' }),
+              React.createElement('path', { d: 'M20 26 Q22 28.5 26 27.5 Q30 28.5 32 26', stroke: '#b0a0a0', strokeWidth: '2', fill: 'none', strokeLinecap: 'round' }),
+              React.createElement('ellipse', { cx: '26', cy: '38', rx: '10', ry: '12', fill: 'white' }),
+              React.createElement('line', { x1: '16', y1: '33', x2: '3', y2: '42', stroke: 'white', strokeWidth: '4.5', strokeLinecap: 'round' }),
+              React.createElement('line', { x1: '3', y1: '42', x2: '1', y2: '60', stroke: '#d0d0d0', strokeWidth: '1.5' }),
+              React.createElement('ellipse', { cx: '1', cy: '60', rx: '4', ry: '2.5', fill: 'none', stroke: '#d0d0d0', strokeWidth: '1.2' }),
+              React.createElement('line', { x1: '36', y1: '33', x2: '49', y2: '42', stroke: 'white', strokeWidth: '4.5', strokeLinecap: 'round' }),
+              React.createElement('line', { x1: '49', y1: '42', x2: '51', y2: '60', stroke: '#d0d0d0', strokeWidth: '1.5' }),
+              React.createElement('ellipse', { cx: '51', cy: '60', rx: '4', ry: '2.5', fill: 'none', stroke: '#d0d0d0', strokeWidth: '1.2' }),
+              React.createElement('line', { x1: '20', y1: '48', x2: '16', y2: '62', stroke: '#1a1a1a', strokeWidth: '5', strokeLinecap: 'round' }),
+              React.createElement('line', { x1: '32', y1: '48', x2: '36', y2: '62', stroke: '#1a1a1a', strokeWidth: '5', strokeLinecap: 'round' }),
+              React.createElement('rect', { x: '4', y: '62', width: '22', height: '3.5', rx: '1.75', fill: '#F5C518' }),
+              React.createElement('ellipse', { cx: '4', cy: '63.75', rx: '3.5', ry: '1.75', fill: '#F5C518' }),
+              React.createElement('ellipse', { cx: '26', cy: '63.75', rx: '3.5', ry: '1.75', fill: '#F5C518' }),
+              React.createElement('rect', { x: '26', y: '62', width: '22', height: '3.5', rx: '1.75', fill: '#F5C518' }),
+              React.createElement('ellipse', { cx: '26', cy: '63.75', rx: '3.5', ry: '1.75', fill: '#F5C518' }),
+              React.createElement('ellipse', { cx: '48', cy: '63.75', rx: '3.5', ry: '1.75', fill: '#F5C518' })
+            )
+          )
         ),
         React.createElement(
           'div',
@@ -864,5 +915,5 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App, null));
-/* Header */ /* Decorative snowflakes top */ /* Winner info */ /* Decorative divider */ /* Podium - handles draws */ /* Snow */ /* Mountains */ /* Title */ /* Setup */ /* Countdown */ /* Racing / Finished */
+/* Header */ /* Snowflakes */ /* Winner info */ /* Divider */ /* Podium — computed above, rendered here */ /* Snow */ /* Mountains */ /* Title */ /* Setup */ /* Countdown */ /* Racing / Finished */
 </script></body></html>
